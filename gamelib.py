@@ -4,6 +4,27 @@ import tkinter.ttk as ttk
 from abc import ABC, abstractmethod
 from utils import distance
 
+class StatusWithText:
+    def __init__(self, app, x, y, text_template, default_value=0):
+        self.x = x
+        self.y = y
+        self.text_template = text_template
+        self._value = default_value
+        self.label_text = Text(app, '', x, y)
+        self.update_label()
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, v):
+        self._value = v
+        self.update_label()
+    
+    def update_label(self):
+        self.label_text.set_text(self.text_template % self.value)
+
 class GameElement(ABC):
 
     @abstractmethod
@@ -21,6 +42,19 @@ class GameElement(ABC):
     @abstractmethod
     def delete(self):
         pass
+
+class EnemyGenerationStrategy(ABC):
+    @abstractmethod
+    def generate(self, space_game, ship):
+        pass
+
+class KeyboardHandler:
+    def __init__(self, successor=None):
+        self.successor = successor
+
+    def handle(self, event):
+        if self.successor:
+            self.successor.handle(event)
 
 class GameCanvasElement(GameElement):
     def __init__(self, game_app, x=0, y=0):
@@ -106,6 +140,9 @@ class GameApp(ttk.Frame):
 
         self.grid(sticky="news")
         self.create_canvas()
+        
+        self.key_pressed_handler = KeyboardHandler()
+        self.key_released_handler = KeyboardHandler()
 
         self.elements = []
         self.init_game()
@@ -127,6 +164,12 @@ class GameApp(ttk.Frame):
 
     def resume_animation(self):
         self.is_stopped = False
+
+    def on_key_pressed(self, event):
+        self.key_pressed_handler.handle(event)
+
+    def on_key_released(self, event):
+        self.key_released_handler.handle(event)
 
     def animate(self):
         if not self.is_stopped:
@@ -158,10 +201,4 @@ class GameApp(ttk.Frame):
         pass
 
     def post_update(self):
-        pass
-
-    def on_key_pressed(self, event):
-        pass
-
-    def on_key_released(self, event):
         pass
