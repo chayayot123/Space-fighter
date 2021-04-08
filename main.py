@@ -6,7 +6,7 @@ import tkinter as tk
 from consts import *
 from elements import Ship, Bullet, Enemy
 from utils import random_edge_position, normalize_vector, direction_to_dxdy, vector_len, distance
-from gamelib import Sprite, GameApp, Text, EnemyGenerationStrategy, KeyboardHandler, StatusWithText
+from gamelib import Sprite, GameApp, Text, EnemyGenerationStrategy, KeyboardHandler
 
 class GameKeyboardHandler(KeyboardHandler):
     def __init__(self, game_app, ship, successor=None):
@@ -124,13 +124,9 @@ class SpaceGame(GameApp):
                 self.ship.x + BOMB_RADIUS, 
                 self.ship.y + BOMB_RADIUS
             )
+        self.after(200, lambda: self.canvas.delete(self.bomb_canvas_id))
 
-            self.after(200, lambda: self.canvas.delete(self.bomb_canvas_id))
-
-            for e in self.enemies:
-                if self.ship.distance_to(e) <= BOMB_RADIUS:
-                    e.to_be_deleted = True
-
+        
     def update_level_text(self):
         self.level.value += 1
 
@@ -196,6 +192,28 @@ class SpaceGame(GameApp):
 
         self.update_score()
         self.update_bomb_power()
+
+class StatusWithText:
+    def __init__(self, app, x, y, text_template, default_value=0):
+        self.x = x
+        self.y = y
+        self.text_template = text_template
+        self._value = default_value
+        self.label_text = Text(app, '', x, y)
+        self.update_label()
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, v):
+        self._value = v
+        self.update_label()
+    
+    def update_label(self):
+        self.label_text.set_text(self.text_template % self.value)
+
 
 
 if __name__ == "__main__":
